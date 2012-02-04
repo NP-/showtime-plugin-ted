@@ -1,9 +1,11 @@
 ﻿/**
- * TED Talks plugin for showtime version 0.1  by NP
+ * TED Talks plugin for showtime version 0.13  by NP
  *
  *  Copyright (C) 2011 NP
  * 
- *  ChangeLog: 
+ *  ChangeLog:
+ *  0.13
+ *  Added support for youtube (requires youtube plugin)
  *  0.12
  *  Minor fix
  *  0.11
@@ -53,9 +55,13 @@ var TED = 'http://www.ted.com';
 			     "on-demand access to the world's most inspiring voices. \n"+
 				 "\n    Plugin developed by NP \n");
 
-  settings.createBool("hd", "HD", false, function(v) {
+	settings.createBool("hd", "HD", false, function(v) {
 				service.hd = v;
 				});
+	
+	settings.createBool("youtube", "Support Youtube links (requires youtube plugin)", false, function(v) {
+	    service.youtube = v;
+	  });
 
 
 function startPage(page) {      	
@@ -103,8 +109,8 @@ plugin.addURI( PREFIX + "list:(.*):(.*):(.*)", function(page, title, link, page_
   showtime.trace( TED +"/talks/list" + linkp );
   var content = showtime.httpGet( TED + "/talks/list" + linkp ).toString();
   
-  content = content.slice(content.indexOf('Showing'),content.indexOf('<div class="themes_links"></div>'));
-  content = content.split('</dd>');
+  content = content.slice(content.indexOf('<dt class="thumbnail">'),content.indexOf('<div class="themes_links"></div>'));
+  content = content.split('<dt class="thumbnail">');
   
   var name = null;
   var img = null;
@@ -112,7 +118,7 @@ plugin.addURI( PREFIX + "list:(.*):(.*):(.*)", function(page, title, link, page_
   var descrip = null;
   
   for each (var talk in content){
-	  if(talk.indexOf('<a title="') != -1 && talk.indexOf('play_botw_icon.gif') == -1){
+	  if(talk.indexOf('<a title="') != -1){ //&& talk.indexOf('play_botw_icon.gif') == -1){
 		name = talk.slice(talk.indexOf('<a title="')+10,talk.indexOf('" href="')).replace(/&quot;/g,'"');
 		descrip = name;
 		
@@ -133,18 +139,23 @@ plugin.addURI( PREFIX + "list:(.*):(.*):(.*)", function(page, title, link, page_
 			};
 		
 		var url = talk.slice(talk.indexOf('href="')+6,talk.indexOf('"',talk.indexOf('href="')+6));
-		page.appendItem( PREFIX + "videos:"+url.replace('http://','') , "video", metadata);
+		showtime.trace('url: ' + url);
+		if(talk.indexOf('/images/play_botw_icon.gif')==-1)
+			page.appendItem( PREFIX + "videos:"+url.replace('http://','') , "video", metadata);
+		else
+			if(service.youtube == "1")
+				page.appendItem( 'youtube:video:simple:'+ metadata.title + ':' + getYoutubeId(url) , "video", metadata);			
 	  }
-	  if(talk.indexOf('">Next') != -1 ){
-		  page_nbr++;
-		  page.appendItem('ted:list:'+ title +':' +link  + ':' + page_nbr , "directory", { title:  "Next" });
-		  }
-		  
-	  //thank u come a again ...
-	  if(talk.indexOf('">Next') == -1 && talk.indexOf('<a title="') == -1)
-			page.appendItem( PREFIX + 'list:'+ title +':' +link + ':' + "1" , "directory", { title:  "The end ... thank you come again.." });
 	}
-  
+  if(content[content.length-1].indexOf('">Next') != -1 ){
+	  page_nbr++;
+	  page.appendItem('ted:list:'+ title +':' +link  + ':' + page_nbr , "directory", { title:  "Next" });
+  }else{
+	//thank u come a again ...
+	//if(talk.indexOf('">Next') == -1 && talk.indexOf('<a title="') == -1)
+		page.appendItem( PREFIX + 'list:'+ title +':' +link + ':' + "1" , "directory", { title:  "The end ... thank you come again.." });
+  }
+
   page.loading = false;
 
 });
@@ -171,9 +182,12 @@ function getUrl(link) {
   else
 	content = content.slice(content.lastIndexOf('http://',content.indexOf('.mp4')),content.indexOf('.mp4')+4);
 	
-  return content;
-	
+  return content;	
 }
-	
+
+function getYoutubeId(link) {
+	var content = showtime.httpGet(TED + link).toString();
+	return content.slice(content.indexOf('/v/')+3, content.indexOf('&',content.indexOf('/v/')+3));
+}	
 plugin.addURI("ted:start", startPage);
 })(this);
