@@ -139,12 +139,11 @@ plugin.addURI( PREFIX + "list:(.*):(.*):(.*)", function(page, title, link, page_
 			};
 		
 		var url = talk.slice(talk.indexOf('href="')+6,talk.indexOf('"',talk.indexOf('href="')+6));
-		showtime.trace('url: ' + url);
 		if(talk.indexOf('/images/play_botw_icon.gif')==-1)
 			page.appendItem( PREFIX + "videos:"+url.replace('http://','') , "video", metadata);
 		else
 			if(service.youtube == "1")
-				page.appendItem( 'youtube:video:simple:'+ metadata.title + ':' + getYoutubeId(url) , "video", metadata);			
+				page.appendItem( 'youtube:video:simple:'+ escape(metadata.title) + ':' + getYoutubeId(url) , "video", metadata);			
 	  }
 	}
   if(content[content.length-1].indexOf('">Next') != -1 ){
