@@ -139,11 +139,8 @@ plugin.addURI( PREFIX + "list:(.*):(.*):(.*)", function(page, title, link, page_
 			
 		pubDate = talk.slice(talk.indexOf('Posted:')+8,talk.indexOf('</span',talk.indexOf('Posted:'))).replace('<span class="notranslate">','');
 		
-		duration = talk.slice(talk.indexOf('<span class="notranslate">')+26,talk.indexOf('</span',talk.indexOf('<span class="notranslate">')));
-		
-		showtime.trace("Date: " + pubDate);
-		showtime.trace("Year: " + year);
-		pubDate = 2012;
+		duration = talk.slice(talk.indexOf('<span class="notranslate">')+26,talk.indexOf('</span',talk.indexOf('<span class="notranslate">')));		
+
 		var metadata = {
 	      title: name,
 	      description: descrip,
