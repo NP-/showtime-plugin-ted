@@ -1,9 +1,12 @@
 ﻿/**
  * TED Talks plugin for showtime version 0.13  by NP
  *
- *  Copyright (C) 2011 NP
+ *  Copyright (C) 2012 NP
  * 
  *  ChangeLog:
+ *  0.14
+ * 	Minor Fix
+ * 	New icon
  *  0.13
  *  Added support for youtube (requires youtube plugin)
  *  0.12
@@ -27,6 +30,9 @@
 
 //TODO : Clean up, add youtube sources
 
+
+	
+
 (function(plugin) {
 
 var PREFIX = 'ted:';
@@ -36,14 +42,14 @@ var TED = 'http://www.ted.com';
 
   var service =
     plugin.createService("TED Talks", PREFIX + "start", "tv", true,
-			   plugin.path + "ted.jpg");
+			   plugin.path + "ted.png");
   
   var settings = plugin.createSettings("TED Talks",
-					  plugin.path + "ted.jpg",
+					  plugin.path + "ted.png",
 					 "Here you will find the best talks and performances from TED conferences");
 
   settings.createInfo("info",
-			     plugin.path + "ted.jpg",
+			     plugin.path + "ted.png",
 			     "\n"+ 
 			     "TED  Talks  began as a simple  attempt to share what \n"+ 
 			     "happens  at  TED  with the world.  Under the moniker \n"+
@@ -67,7 +73,7 @@ var TED = 'http://www.ted.com';
 function startPage(page) {      	
 
    page.type = "directory";
-   page.metadata.logo = plugin.path + "ted.jpg";
+   page.metadata.logo = plugin.path + "ted.png";
    page.metadata.title = "TED Talks: " + "Order By";
    
    var list = { indice: [ 
@@ -99,23 +105,25 @@ plugin.addURI( PREFIX + "list:(.*):(.*):(.*)", function(page, title, link, page_
 	 
   page.type = "directory";
   page.contents = "video";
-  page.metadata.logo = plugin.path + "ted.jpg";
+  page.metadata.logo = plugin.path + "ted.png";
   page.metadata.title = "TED Talks: " + title;
   
   if(page_nbr > 1 ){
 	page.metadata.title = "TED Talks: " + title + " " + page_nbr;
 	var linkp =link +"&page=" + page_nbr;
 	}else{ var linkp = link; }
-  showtime.trace( TED +"/talks/list" + linkp );
+  showtime.trace( "URL: " + TED +"/talks/list" + linkp );
   var content = showtime.httpGet( TED + "/talks/list" + linkp ).toString();
   
-  content = content.slice(content.indexOf('<dt class="thumbnail">'),content.indexOf('<div class="themes_links"></div>'));
-  content = content.split('<dt class="thumbnail">');
+  content = content.slice(content.indexOf('<div class="col clearfix">'),content.indexOf('<!-- sidebar -->'));
+  content = content.split('<div class="col clearfix">');
   
   var name = null;
   var img = null;
   var pubDate = null;
+  var year = null;
   var descrip = null;
+  var duration = null;
   
   for each (var talk in content){
 	  if(talk.indexOf('<a title="') != -1){ //&& talk.indexOf('play_botw_icon.gif') == -1){
@@ -129,12 +137,18 @@ plugin.addURI( PREFIX + "list:(.*):(.*):(.*)", function(page, title, link, page_
 		if(showtime.probe(img.replace('132x99.jpg','615x461.jpg')).result == 0)
 			img = img.replace('132x99.jpg','615x461.jpg');
 			
-		pubDate =talk.slice(talk.indexOf('<p><em class="date">')+20,talk.indexOf('</em></p>',talk.indexOf('<p><em class="date">')));
+		pubDate = talk.slice(talk.indexOf('Posted:')+8,talk.indexOf('</span',talk.indexOf('Posted:'))).replace('<span class="notranslate">','');
 		
+		duration = talk.slice(talk.indexOf('<span class="notranslate">')+26,talk.indexOf('</span',talk.indexOf('<span class="notranslate">')));
+		
+		showtime.trace("Date: " + pubDate);
+		showtime.trace("Year: " + year);
+		pubDate = 2012;
 		var metadata = {
 	      title: name,
 	      description: descrip,
 	      year: pubDate,
+	      duration: duration,
 	      icon: img
 			};
 		
